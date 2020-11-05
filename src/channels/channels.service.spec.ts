@@ -38,6 +38,13 @@ describe('ChannelsService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('find', () => {
+    it('returns an array of channels', () => {
+      channelRepository.find.mockReturnValue([oneChannel])
+      expect(service.findAll()).toEqual([oneChannel])
+    })
+  })
+
   describe('findOne', () => {
     describe('when channel with ID exists', () => {
       it('should return the channel object', async () => {
@@ -84,12 +91,25 @@ describe('ChannelsService', () => {
       })
       expect(channel).toEqual(oneChannel)
     })
+
+    it('should throw not found exception when no channel is found', async () => {
+      channelRepository.preload.mockReturnValue(undefined)
+      try {
+        await service.update(1, {
+          name: 'channel 1'
+        })
+      } catch (err) {
+        expect(err).toBeInstanceOf(NotFoundException)
+        expect(err.message).toEqual(`Channel with id 1 was not found to update`)
+      }
+    })
   })
 
   describe('delete', () => {
     it('should return deleted item', () => {
       channelRepository.remove.mockReturnValue(oneChannel)
       expect(service.remove(1)).resolves.toEqual(oneChannel)
+      // expect(channelRepository.remove).toBeCalledWith(oneChannel)
     })
   })
 });

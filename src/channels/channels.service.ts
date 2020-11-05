@@ -36,13 +36,14 @@ export class ChannelsService {
       ...updateChannelDto
     })
     if (!channel) {
-      throw new NotFoundException(`Channel with id ${id} was not found to update.`)
+      throw new NotFoundException(`Channel with id ${id} was not found to update`)
     }
     return channel
   }
 
   async remove(id: number) {
-    const channel = await this.findOne(id)
-    return this.channelRepository.remove(channel)
+    let channel = await this.findOne(id)
+    channel = await this.channelRepository.remove(channel)
+    return channel
   }
 }
