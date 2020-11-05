@@ -8,4 +8,3 @@ services:
       - "5432:5432"
     environment: 
       POSTGRES_PASSWORD: "toor"
-      POSTGRES_DB: "hymnal-server"
