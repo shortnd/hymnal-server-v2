@@ -5,7 +5,7 @@ import { AppService } from './app.service';
 import { ChannelsModule } from './channels/channels.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot({
+  imports: [ChannelsModule, TypeOrmModule.forRoot({
     type: 'postgres',
     host: 'localhost',
     port: 5432,
@@ -15,7 +15,6 @@ import { ChannelsModule } from './channels/channels.module';
     autoLoadEntities: true,
     synchronize: true
   }),
-  ChannelsModule
 ],
   controllers: [AppController],
   providers: [AppService],
