@@ -1,11 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelsController } from './channels.controller';
 import { ChannelsService } from './channels.service';
+import { Channel } from './entities/channel.entity';
 
 describe('ChannelsController', () => {
   let controller: ChannelsController;
   let service: ChannelsService
-  let mockUsersResults: any
+
+  const channelsArray = [
+    new Channel('Channel 1'),
+    new Channel('Channel 2')
+  ]
+  const oneChannel = new Channel('Channel 1')
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -13,19 +19,17 @@ describe('ChannelsController', () => {
       providers: [{
         provide: ChannelsService,
         useValue: {
-          findAll: jest.fn().mockReturnValue([
-            { name: 'Channel 1' },
-            { name: 'Channel 2' }
-          ]),
-          findOne: jest.fn().mockReturnValue({
-            name: 'Channel 1',
-            id: 1,
-          })
+          findAll: jest.fn().mockReturnValue(channelsArray),
+          findOne: jest.fn().mockReturnValue(oneChannel),
+          create: jest.fn().mockReturnValue(oneChannel),
+          update: jest.fn().mockReturnValue(oneChannel),
+          remove: jest.fn().mockReturnValue(oneChannel)
         },
       }],
     }).compile();
 
     controller = module.get<ChannelsController>(ChannelsController);
+    service = module.get<ChannelsService>(ChannelsService)
   });
 
   it('should be defined', () => {
@@ -34,19 +38,36 @@ describe('ChannelsController', () => {
 
   describe('findAll', () => {
     it('should get an array of channels', () => {
-      expect(controller.findAll()).toEqual([
-        {
-          name: 'Channel 1'
-        }, {
-          name: 'Channel 2'
-        }
-      ])
+      expect(controller.findAll()).toEqual(channelsArray)
+      expect(service.findAll).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('find', () => {
     it('should return a single channel', () => {
-      expect(controller.findOne('1')).toEqual({ name: 'Channel 1', id: 1 })
+      expect(controller.findOne('1')).toEqual(oneChannel)
+      expect(service.findOne).toBeCalledTimes(1)
+    })
+  })
+
+  describe('create', () => {
+    it('should return the new channel', () => {
+      expect(controller.create({ name: 'Channel 1' })).toEqual(oneChannel)
+      expect(service.create).toBeCalledTimes(1)
+    })
+  })
+
+  describe('update', () => {
+    it('should return the updated channel', () => {
+      expect(controller.update('1', { name: 'Channel 1' })).toEqual(oneChannel)
+      expect(service.update).toBeCalledTimes(1)
+    })
+  })
+
+  describe('remove', () => {
+    it('should return the removed channel', () => {
+      expect(controller.remove('1')).toEqual(oneChannel)
+      expect(service.remove).toHaveBeenCalledTimes(1)
     })
   })
 });
