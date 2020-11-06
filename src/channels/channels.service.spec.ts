@@ -5,17 +5,22 @@ import { Connection, Repository } from 'typeorm';
 import { ChannelsService } from './channels.service';
 import { Channel } from './entities/channel.entity';
 
+const oneChannel = new Channel('Channel 1')
+const channelArray = [
+  oneChannel,
+  new Channel('Channel 2')
+]
+
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 const createMockRepository = <T = any>(): MockRepository<T> => ({
-  find: jest.fn(),
-  findOne: jest.fn(),
-  create: jest.fn(),
-  save: jest.fn(),
-  preload: jest.fn(),
-  remove: jest.fn()
+  find: jest.fn().mockReturnValue(channelArray),
+  findOne: jest.fn().mockReturnValue(oneChannel),
+  create: jest.fn().mockReturnValue(oneChannel),
+  save: jest.fn().mockReturnValue(oneChannel),
+  preload: jest.fn().mockReturnValue(oneChannel),
+  remove: jest.fn().mockReturnValue(oneChannel)
 })
 
-const oneChannel = new Channel('Channel 1')
 describe('ChannelsService', () => {
   let service: ChannelsService;
   let channelRepository: MockRepository 
@@ -40,8 +45,7 @@ describe('ChannelsService', () => {
 
   describe('find', () => {
     it('returns an array of channels', () => {
-      channelRepository.find.mockReturnValue([oneChannel])
-      expect(service.findAll()).toEqual([oneChannel])
+      expect(service.findAll()).toEqual(channelArray)
     })
   })
 
@@ -49,19 +53,17 @@ describe('ChannelsService', () => {
     describe('when channel with ID exists', () => {
       it('should return the channel object', async () => {
         const channelID = '1'
-        const expectedChannel = {}
-        channelRepository.findOne.mockReturnValue(expectedChannel)
         const channel = await service.findOne(+channelID)
-        expect(channel).toEqual(expectedChannel)
+        expect(channel).toEqual(oneChannel)
       })
     })
     describe('otherwise', () => {
       it('should throw the "NotFoundException"', async () => {
-        const channelID = '1'
+        const channelID = 1
         channelRepository.findOne.mockReturnValue(undefined)
 
         try {
-          await service.findOne(+channelID)
+          await service.findOne(channelID)
         } catch (err) {
           expect(err).toBeInstanceOf(NotFoundException)
           expect(err.message).toEqual(`Channel with id ${channelID} was not found`)
@@ -71,11 +73,11 @@ describe('ChannelsService', () => {
   })
 
   describe('create', () => {
-    it('should successfully create a channel', () => {
+    it('should successfully create a channel', async () => {
       channelRepository.create.mockReturnValue(oneChannel)
-      expect(service.create({
+      expect(await service.create({
         name: 'Channel 1'
-      })).resolves.toEqual(oneChannel)
+      })).toEqual(oneChannel)
       expect(channelRepository.create).toBeCalledTimes(1)
       expect(channelRepository.create).toBeCalledWith({
         name: 'Channel 1'
@@ -85,7 +87,6 @@ describe('ChannelsService', () => {
 
   describe('update', () => {
     it('should call the update method', async () => {
-      channelRepository.preload.mockReturnValue(oneChannel)
       const channel = await service.update(1, {
         name: 'Channel 1'
       })
@@ -106,10 +107,10 @@ describe('ChannelsService', () => {
   })
 
   describe('delete', () => {
-    it('should return deleted item', () => {
-      channelRepository.remove.mockReturnValue(oneChannel)
-      expect(service.remove(1)).resolves.toEqual(oneChannel)
-      // expect(channelRepository.remove).toBeCalledWith(oneChannel)
+    it('should return deleted item', async () => {
+      expect(await service.remove(1)).toEqual(oneChannel)
+      expect(channelRepository.remove).toHaveBeenCalled()
+      expect(channelRepository.remove).toBeCalledWith(oneChannel)
     })
   })
 });
